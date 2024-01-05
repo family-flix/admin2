@@ -17,7 +17,7 @@ type TheTypesOfEvents = {
   [Events.Percent]: Record<string, number>;
 };
 const jobs: JobCore[] = [];
-export const jobPercents: Record<string, number> = {};
+// export const jobPercents: Record<string, number> = {};
 const emitter = mitt<TheTypesOfEvents>();
 
 export async function refreshJobs() {
@@ -66,11 +66,12 @@ export function appendJob(job: JobCore) {
   if (jobs.includes(job)) {
     return;
   }
-  jobPercents[job.id] = job.percent;
-  const unlisten1 = job.onPercent((percent) => {
-    jobPercents[job.id] = percent;
-    console.log("[STORE]store/job - job.onPercent", job.id, percent);
-    emitter.emit(Events.Percent, { ...jobPercents });
+  // jobPercents[job.id] = job.percent;
+  const unlisten1 = job.onUpdate(() => {
+    //   jobPercents[job.id] = percent;
+    //   console.log("[STORE]store/job - job.onPercent", job.id, percent);
+    //   emitter.emit(Events.Percent, { ...jobPercents });
+    emitter.emit(Events.JobsChange, [...jobs]);
   });
   const unlisten = job.onFinish(() => {
     removeJob(job);

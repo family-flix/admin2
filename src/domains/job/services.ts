@@ -18,7 +18,9 @@ export async function fetchJobList(params: FetchParams) {
       status: TaskStatus;
       desc: string;
       error?: string;
+      percent: number;
       created: string;
+      updated: string;
     }>
   >(`/api/admin/job/list`, params);
   if (res.error) {
@@ -27,9 +29,10 @@ export async function fetchJobList(params: FetchParams) {
   const result = {
     ...res.data,
     list: res.data.list.map((task) => {
-      const { created, status, ...rest } = task;
+      const { created, updated, status, percent = 0, ...rest } = task;
       return {
         ...rest,
+        percent,
         status,
         statusText: (() => {
           if (status === TaskStatus.Running) {
@@ -44,6 +47,7 @@ export async function fetchJobList(params: FetchParams) {
           return "未知";
         })(),
         created: dayjs(created).format("YYYY-MM-DD HH:mm:ss"),
+        updated: dayjs(updated).format("YYYY-MM-DD HH:mm:ss"),
         // created: relative_time_from_now(created),
       };
     }),
@@ -143,7 +147,7 @@ export async function fetch_output_lines_of_job(body: { job_id: string; page: nu
 /**
  * 查询索引任务状态
  */
-export function fetch_job_status(id: string) {
+export function fetchJobStatus(id: string) {
   return request.get<{
     id: string;
     desc: string;
@@ -151,6 +155,8 @@ export function fetch_job_status(id: string) {
     status: TaskStatus;
     percent: number;
     error?: string;
+    created: string;
+    updated: string;
   }>(`/api/admin/job/status/${id}`);
 }
 // export type JobItem = RequestedResource<typeof fetch_job_status>;

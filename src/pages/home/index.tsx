@@ -144,7 +144,7 @@ export const HomePage: ViewComponent = (props) => {
               <div class="grid grid-cols-1 gap-2 mt-4 lg:grid-cols-2">
                 <div class="relative p-4 bg-white rounded-xl border border-1">
                   <div class="flex">
-                    <Skeleton class="w-16 h-16 mr-4 rounded"></Skeleton>
+                    <Skeleton class="w-8 h-8 mr-4 rounded"></Skeleton>
                     <div class="flex-1 pr-12">
                       <Skeleton class="h-[24px]"></Skeleton>
                       <Skeleton class="mt-2 h-[18px]"></Skeleton>

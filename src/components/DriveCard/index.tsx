@@ -454,7 +454,7 @@ export const DriveCard = (props: {
             </DropdownMenu>
           </div>
           <div class="flex">
-            <LazyImage class="overflow-hidden w-16 h-16 mr-4 rounded" src={avatar()} alt={name()} />
+            <LazyImage class="overflow-hidden w-8 h-8 mr-4 rounded" src={avatar()} alt={name()} />
             <div class="flex-1 w-0 pr-12">
               <div class="text-xl">{name()}</div>
               <Progress class="mt-2" store={progress} />
@@ -466,9 +466,9 @@ export const DriveCard = (props: {
                   <For each={state().vip}>
                     {(vip) => {
                       return (
-                        <div class="flex text-sm text-slate-800">
+                        <div class="flex text-sm break-all truncate text-slate-800">
                           <div>{vip.name}</div>
-                          <div class="ml-2">{vip.expired_at_text}</div>
+                          <div class="ml-2 break-all">{vip.expired_at_text}</div>
                         </div>
                       );
                     }}

@@ -3,14 +3,14 @@ import dayjs, { Dayjs } from "dayjs";
 import { BaseDomain, Handler } from "@/domains/base";
 import { Result } from "@/types";
 
-import { fetch_job_profile, fetch_job_status, pause_job } from "./services";
+import { fetch_job_profile, fetchJobStatus, pause_job } from "./services";
 import { TaskStatus } from "./constants";
 
 enum Events {
   StateChange,
   Finish,
   Pause,
-  Percent,
+  Update,
   Failed,
   Completed,
 }
@@ -18,7 +18,10 @@ type TheTypesOfEvents = {
   [Events.StateChange]: JobState;
   [Events.Finish]: void;
   [Events.Pause]: void;
-  [Events.Percent]: number;
+  [Events.Update]: {
+    percent: number;
+    updated: string;
+  };
   [Events.Failed]: void;
   [Events.Completed]: void;
 };
@@ -51,6 +54,7 @@ export class JobCore extends BaseDomain<TheTypesOfEvents> {
   /** 任务是否已结束 */
   completed = false;
   percent = 0;
+  updated: string | null = null;
   /** 开始时间 */
   start?: Dayjs;
 
@@ -69,12 +73,13 @@ export class JobCore extends BaseDomain<TheTypesOfEvents> {
   }
 
   async fetchStatus() {
-    const r = await fetch_job_status(this.id);
+    const r = await fetchJobStatus(this.id);
     if (r.error) {
       return Result.Err(r.error);
     }
-    const { status, percent } = r.data;
+    const { status, percent, updated } = r.data;
     this.percent = percent;
+    this.updated = updated;
     // if (percent && this.percent !== percent) {
     //   this.percent = percent;
     //   this.emit(Events.Percent, this.percent);
@@ -92,7 +97,7 @@ export class JobCore extends BaseDomain<TheTypesOfEvents> {
       //   this.forceFinish();
       //   return;
       // }
-      const r = await fetch_job_status(this.id);
+      const r = await fetchJobStatus(this.id);
       if (r.error) {
         this.loading = false;
         this.emit(Events.StateChange, { ...this.state });
@@ -104,10 +109,14 @@ export class JobCore extends BaseDomain<TheTypesOfEvents> {
         }
         return;
       }
-      const { status, percent, error } = r.data;
+      const { status, percent, error, updated } = r.data;
       console.log("[DOMAIN]job/index - fetchStatus", percent, this.percent);
-        this.percent = percent;
-        this.emit(Events.Percent, this.percent);
+      this.percent = percent;
+      this.updated = updated;
+      this.emit(Events.Update, {
+        percent,
+        updated,
+      });
       // if (percent && this.percent !== percent) {
       //   this.percent = percent;
       //   this.emit(Events.Percent, this.percent);
@@ -164,8 +173,8 @@ export class JobCore extends BaseDomain<TheTypesOfEvents> {
   onPause(handler: Handler<TheTypesOfEvents[Events.Pause]>) {
     return this.on(Events.Pause, handler);
   }
-  onPercent(handler: Handler<TheTypesOfEvents[Events.Percent]>) {
-    return this.on(Events.Percent, handler);
+  onUpdate(handler: Handler<TheTypesOfEvents[Events.Update]>) {
+    return this.on(Events.Update, handler);
   }
   onFailed(handler: Handler<TheTypesOfEvents[Events.Failed]>) {
     return this.on(Events.Failed, handler);

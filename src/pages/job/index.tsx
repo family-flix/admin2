@@ -9,8 +9,8 @@ import { Button, Skeleton, ScrollView, ListView, Checkbox, Progress } from "@/co
 import { ButtonCore, ButtonInListCore, CheckboxCore, ScrollViewCore } from "@/domains/ui";
 import { RequestCore } from "@/domains/request";
 import { ListCore } from "@/domains/list";
-import { JobItem, clear_expired_job_list, fetchJobList, pause_job, TaskStatus } from "@/domains/job";
-import { homeTaskProfilePage, onJobsPercentChange, refreshJobs } from "@/store";
+import { JobItem, clear_expired_job_list, fetchJobList, pause_job, TaskStatus, JobCore } from "@/domains/job";
+import { homeTaskProfilePage, onJobsChange, onJobsPercentChange, refreshJobs } from "@/store";
 import { ViewComponent } from "@/types";
 import { cn } from "@/utils";
 
@@ -83,14 +83,30 @@ export const TaskListPage: ViewComponent = (props) => {
   });
 
   const [response, setResponse] = createSignal(jobList.response);
-  const [jobPercents, setJobPercents] = createSignal<Record<string, number>>({});
+  // const [runningJobs, setRunningJobs] = createSignal<JobCore[]>([]);
 
   jobList.onStateChange((nextState) => {
     setResponse(nextState);
   });
-  onJobsPercentChange((percents) => {
-    setJobPercents(percents);
+  onJobsChange((jobs) => {
+    jobList.modifyDataSource((item) => {
+      const matched = jobs.find((j) => j.id === item.id);
+      if (!matched) {
+        return item;
+      }
+      // item.percent = matched.percent;
+      // item.updated = matched.updated!;
+      // return item;
+      return {
+        ...item,
+        percent: matched.percent,
+        updated: matched.updated!,
+      };
+    });
   });
+  // onJobsPercentChange((percents) => {
+  //   setRunningJobs(percents);
+  // });
 
   const statusIcons: Record<TaskStatus, () => JSX.Element> = {
     [TaskStatus.Finished]: () => <CheckCircle class="w-4 h-4" />,
@@ -148,17 +164,18 @@ export const TaskListPage: ViewComponent = (props) => {
                       <div class={cn({})}>{statusText}</div>
                     </div>
                   </div>
-                  <Show when={jobPercents()[id]}>
+                  <Show when={status === TaskStatus.Running}>
                     <div class="mt-4">
                       <div
                         class={cn("relative h-1 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800")}
                       >
                         <div
                           class="h-full w-full flex-1 bg-slate-900 transition-all dark:bg-slate-400"
-                          style={{ transform: `translateX(-${100 - jobPercents()[id] * 100}%)` }}
+                          style={{ transform: `translateX(-${100 - task.percent * 100}%)` }}
                         />
                       </div>
-                      <div class="text-sm text-slate-800">{jobPercents()[id] * 100}%</div>
+                      <div class="text-sm text-slate-800">{task.percent * 100}%</div>
+                      <div class="text-sm text-slate-800">{task.updated}</div>
                     </div>
                   </Show>
                   <div class="mt-2 space-x-2">
